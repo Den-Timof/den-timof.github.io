@@ -1,158 +1,174 @@
-const tileDisplay = document.querySelector('.tile-container')
-const keyboard = document.querySelector('.key-container')
-const messageDisplay = document.querySelector('.message-container')
+const timeLeftDisplay = document.querySelector('#time-left')
+const resultDisplay = document.querySelector('#result')
+const startPauseButton = document.querySelector('#start-pause-button')
+const squares = document.querySelectorAll('.grid div')
+const logsLeft = document.querySelectorAll('.log-left')
+const logsRight = document.querySelectorAll('.log-right')
+const carsLeft = document.querySelectorAll('.car-left')
+const carsRight = document.querySelectorAll('.car-right')
 
-// const wordle = "SUPER"
-const wordle = "ВЕТКА"
+console.log('squares', squares)
+let currentIndex = 76
+const width = 9
+let timerId
+let outcomeTimerId
+let currentTime = 20
 
-// const keys = [
-// 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'ВВОД', 'СТЕРЕТЬ'
-// ]
-const keys = [
-	'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я', 'ВВОД', 'СТЕРЕТЬ'
-]
+function moveFrog(e) {
+	squares[currentIndex].classList.remove('frog')
 
-const guessRows = [
-	['', '', '', '', ''],
-	['', '', '', '', ''],
-	['', '', '', '', ''],
-	['', '', '', '', ''],
-	['', '', '', '', ''],
-	['', '', '', '', ''],
-]
+	switch(e.key) {
+		case 'ArrowLeft' :
+			if(currentIndex % width !== 0) currentIndex -= 1
+			break
+		case 'ArrowRight' :
+			if(currentIndex % width < width - 1) currentIndex += 1
+			break
+		case 'ArrowUp' :
+			if(currentIndex - width >= 0) currentIndex -= width
+			break
+		case 'ArrowDown' :
+			if(currentIndex + width < width * width) currentIndex += width
+			break
+	}
 
-let currentRow = 0
-let currentTile = 0
-let isGameOver = false
+	squares[currentIndex].classList.add('frog')
+}
 
-guessRows.forEach((guessRow,guessRowIndex) => {
-	const rowElement = document.createElement('div')
-	rowElement.setAttribute('id', 'guessRow-' + guessRowIndex)
-	guessRow.forEach((guess, guessIndex) => {
-		const tileElement = document.createElement('div')
-		tileElement.setAttribute('id', 'guessRow-' + guessRowIndex + '-tile-' + guessIndex)
-		tileElement.classList.add('tile')
-		rowElement.append(tileElement)
-	})
-	tileDisplay.append(rowElement)
+function autoMoveElements() {
+	currentTime--
+	timeLeftDisplay.textContent = currentTime
+
+	logsLeft.forEach(logLeft => moveLogLeft(logLeft))
+	logsRight.forEach(logRight => moveLogRight(logRight))
+	carsLeft.forEach(carLeft => moveCarLeft(carLeft))
+	carsRight.forEach(carRight => moveCarRight(carRight))
+}
+
+function ckeckOutComes() {
+	lose()
+	win()
+}
+
+function moveLogLeft(logLeft) {
+	switch (true) {
+		case logLeft.classList.contains('l1'):
+			logLeft.classList.remove('l1')
+			logLeft.classList.add('l2')
+			break
+		case logLeft.classList.contains('l2'):
+			logLeft.classList.remove('l2')
+			logLeft.classList.add('l3')
+			break
+		case logLeft.classList.contains('l3'):
+			logLeft.classList.remove('l3')
+			logLeft.classList.add('l4')
+			break
+		case logLeft.classList.contains('l4'):
+			logLeft.classList.remove('l4')
+			logLeft.classList.add('l5')
+			break
+		case logLeft.classList.contains('l5'):
+			logLeft.classList.remove('l5')
+			logLeft.classList.add('l1')
+			break
+	}
+}
+
+function moveLogRight(logRight) {
+	switch (true) {
+		case logRight.classList.contains('l1'):
+			logRight.classList.remove('l1')
+			logRight.classList.add('l5')
+			break
+		case logRight.classList.contains('l2'):
+			logRight.classList.remove('l2')
+			logRight.classList.add('l1')
+			break
+		case logRight.classList.contains('l3'):
+			logRight.classList.remove('l3')
+			logRight.classList.add('l2')
+			break
+		case logRight.classList.contains('l4'):
+			logRight.classList.remove('l4')
+			logRight.classList.add('l3')
+			break
+		case logRight.classList.contains('l5'):
+			logRight.classList.remove('l5')
+			logRight.classList.add('l4')
+			break
+	}
+}
+
+function moveCarLeft(carLeft) {
+	switch (true) {
+		case carLeft.classList.contains('c1'):
+			carLeft.classList.remove('c1')
+			carLeft.classList.add('c2')
+			break
+		case carLeft.classList.contains('c2'):
+			carLeft.classList.remove('c2')
+			carLeft.classList.add('c3')
+			break
+		case carLeft.classList.contains('c3'):
+			carLeft.classList.remove('c3')
+			carLeft.classList.add('c1')
+			break
+	}
+}
+
+function moveCarRight(carRight) {
+	switch (true) {
+		case carRight.classList.contains('c1'):
+			carRight.classList.remove('c1')
+			carRight.classList.add('c3')
+			break
+		case carRight.classList.contains('c2'):
+			carRight.classList.remove('c2')
+			carRight.classList.add('c1')
+			break
+		case carRight.classList.contains('c3'):
+			carRight.classList.remove('c3')
+			carRight.classList.add('c2')
+			break
+	}
+}
+
+function lose() {
+	if(
+		squares[currentIndex].classList.contains('c1') ||
+		squares[currentIndex].classList.contains('l4') ||
+		squares[currentIndex].classList.contains('l5') ||
+		currentTime <= 0
+	) {
+		resultDisplay.textContent = "You lose!"
+		clearInterval(timerId)
+		clearInterval(outcomeTimerId)
+		squares[currentIndex].classList.remove('frog')
+		document.removeEventListener('keyup', moveFrog)
+	}
+}
+
+function win() {
+	if(squares[currentIndex].classList.contains('ending-block')) {
+		resultDisplay.textContent = "You win!"
+		clearInterval(timerId)
+		clearInterval(outcomeTimerId)
+		document.removeEventListener('keyup', moveFrog)
+	}
+}
+
+startPauseButton.addEventListener('click', () => {
+	if(timerId) {
+		clearInterval(timerId)
+		clearInterval(outcomeTimerId)
+		outcomeTimerId = null
+		timerId = null
+		document.removeEventListener('keyup', moveFrog)
+	} else {
+		timerId = setInterval(autoMoveElements, 1000)
+		outcomeTimerId = setInterval(ckeckOutComes, 50);
+		document.addEventListener('keyup', moveFrog)
+	}
 })
 
-
-
-keys.forEach(key => {
-	const buttonElement = document.createElement('button')
-	buttonElement.textContent = key
-	buttonElement.setAttribute('id', key)
-	buttonElement.addEventListener('click', () => handlerClick(key))
-	keyboard.append(buttonElement)
-})
-
-const handlerClick = (letter) => {
-	console.log('clicked', letter)
-	if(letter === 'СТЕРЕТЬ') {
-		deleteLetter()
-		console.log('guessRows', guessRows);
-		return
-	}
-	if(letter === 'ВВОД') {
-		checkRow()
-		console.log('guessRows', guessRows);
-		return
-	}
-	
-	addLetter(letter)
-	console.log('guessRows', guessRows);
-}
-
-const addLetter = (letter) => {
-	if(currentTile < 5 && currentRow < 6) {
-		const tile = document.getElementById('guessRow-' + currentRow + '-tile-' + currentTile)
-		tile.textContent = letter
-		guessRows[currentRow][currentTile] = letter
-		tile.setAttribute('data', letter)
-		currentTile++
-	}
-}
-
-const deleteLetter = (letter) => {
-	if( currentTile > 0 ) {
-		currentTile--
-		const tile = document.getElementById('guessRow-' + currentRow + '-tile-' + currentTile)
-		tile.textContent = ''
-		guessRows[currentRow][currentTile] = ''
-		tile.setAttribute('data', '')
-	}
-}
-
-const checkRow = () => {
-	const guess = guessRows[currentRow].join('')
-
-	if(currentTile > 4) {
-		console.log('guess is ' + guess, 'wordle is ' + wordle);
-		flipTile()
-		if(wordle == guess) {
-			showMessage('Magnificent!')
-			isGameOver = true
-			return
-		} else {
-			if(currentRow >= 5) {
-				isGameOver = false
-				showMessage('Game Over')
-				return
-			}
-			if(currentRow < 5) {
-				currentRow++
-				currentTile = 0
-			}
-		}
-	}
-}
-
-const showMessage = (message) => {
-	const messageElement = document.createElement('p')
-	messageElement.textContent = message
-	messageDisplay.append(messageElement)
-	setTimeout(() => messageDisplay.removeChild(messageElement), 2000)
-}
-
-const addColorToKey = (keyLetter, color) => {
-	const key = document.getElementById(keyLetter)
-	key.classList.add(color)
-}
-
-const flipTile = () => {
-	const rowTiles = document.querySelector('#guessRow-' + currentRow).childNodes
-	let checkWordle = wordle
-	const guess = []
-
-	rowTiles.forEach(tile => {
-		guess.push({
-			letter: tile.getAttribute('data'), 
-			color: 'grey-overlay'
-		})
-	})
-
-	guess.forEach((guess, index) => {
-		if(guess.letter == wordle[index]) {
-			guess.color = 'green-overlay'
-			checkWordle = checkWordle.replace(guess.letter, '')
-		}
-	})
-
-	guess.forEach(guess => {
-		if(checkWordle.includes(guess.letter)) {
-			guess.color = 'yellow-overlay'
-			checkWordle = checkWordle.replace(guess.letter, '')
-		}
-	})
-
-	console.log('guess', guess);
-
-	rowTiles.forEach((tile, index) => {
-		setTimeout(() => {
-			tile.classList.add('flip')
-			tile.classList.add(guess[index].color)
-			addColorToKey(guess[index].letter, guess[index].color)
-		}, 500 * index);
-	})
-}
